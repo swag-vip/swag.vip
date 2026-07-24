@@ -285,7 +285,7 @@
             background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
             cursor: pointer; display: none; align-items: center; justify-content: center;
             transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-            color: white;
+            color: white; overflow: visible;
         }
         .chat-toggle:hover {
             background: rgba(255,255,255,0.9); color: #000;
@@ -293,6 +293,34 @@
             box-shadow: 0 0 25px rgba(255,255,255,0.3);
         }
         .chat-toggle svg { width: 20px; height: 20px; }
+
+        .btn-ring-arrows {
+            position: absolute;
+            width: 58px; height: 58px;
+            pointer-events: none;
+            animation: ringSpin 6s linear infinite;
+        }
+
+        @keyframes ringSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-ring-arrows svg {
+            position: absolute;
+            animation: arrowPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
+        }
+
+        .btn-ring-arrows svg:nth-child(1) { animation-delay: 0s; }
+        .btn-ring-arrows svg:nth-child(2) { animation-delay: 0.5s; }
+        .btn-ring-arrows svg:nth-child(3) { animation-delay: 1s; }
+        .btn-ring-arrows svg:nth-child(4) { animation-delay: 1.5s; }
+
+        @keyframes arrowPulse {
+            0%, 100% { opacity: 0.15; }
+            50% { opacity: 0.8; }
+        }
 
         .chat-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -518,7 +546,7 @@
             background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
             cursor: pointer; display: none; align-items: center; justify-content: center;
             transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
-            overflow: hidden; opacity: 0.4;
+            overflow: visible; opacity: 0.4;
         }
 
         .profile-toggle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
@@ -708,6 +736,12 @@
     <button class="profile-toggle" id="profileToggle" onclick="toggleProfile()">
         <span class="toggle-icon">&#9787;</span>
         <img id="profileToggleImg" src="" alt="">
+        <div class="btn-ring-arrows" style="position:absolute;top:50%;left:50%;width:58px;height:58px;margin-top:-29px;margin-left:-29px;">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;top:-2px;left:50%;transform:translateX(-50%) rotate(-45deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%) rotate(135deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;left:-2px;top:50%;transform:translateY(-50%) rotate(-135deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;right:-2px;top:50%;transform:translateY(-50%) rotate(45deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+        </div>
     </button>
 
     <div class="profile-overlay" id="profileOverlay" onclick="toggleProfile()"></div>
@@ -737,6 +771,12 @@
         <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
         </svg>
+        <div class="btn-ring-arrows" style="position:absolute;top:50%;left:50%;width:58px;height:58px;margin-top:-29px;margin-left:-29px;">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;top:-2px;left:50%;transform:translateX(-50%) rotate(-45deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%) rotate(135deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;left:-2px;top:50%;transform:translateY(-50%) rotate(-135deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.5" style="position:absolute;right:-2px;top:50%;transform:translateY(-50%) rotate(45deg);"><path d="M3 9L9 3M9 3H4M9 3v5"/></svg>
+        </div>
     </button>
 
     <div class="chat-overlay" id="chatOverlay" onclick="toggleChat()"></div>
