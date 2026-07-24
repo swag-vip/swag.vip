@@ -180,16 +180,6 @@
             transition: width 0.3s linear;
         }
 
-        .music-frame {
-            position: fixed;
-            bottom: -9999px;
-            left: -9999px;
-            width: 0;
-            height: 0;
-            opacity: 0;
-            pointer-events: none;
-        }
-
         @media (max-width: 480px) {
             .avatar {
                 width: 80px;
@@ -241,7 +231,7 @@
         <p class="footer">5w2g</p>
     </div>
 
-    <div class="music-frame" id="musicFrame">
+    <div style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;">
         <div id="ytPlayer"></div>
     </div>
 
@@ -253,16 +243,23 @@
         <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
         </svg>
+        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <path d="M8 5v14l11-7z"/>
+        </svg>
     </button>
 
     <script>
-        let player;
-        let playing = true;
+        var tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+
+        var player;
+        var playing = true;
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('ytPlayer', {
-                height: '0',
-                width: '0',
+                height: '1',
+                width: '1',
                 videoId: 'MRmecqnNFb8',
                 playerVars: {
                     autoplay: 1,
@@ -273,26 +270,39 @@
                     modestbranding: 1
                 },
                 events: {
-                    onReady: function(e) { e.target.unMute(); e.target.playVideo(); },
-                    onStateChange: function(e) { if (e.data === YT.PlayerState.ENDED) { e.target.seekTo(0); e.target.playVideo(); } }
+                    onReady: function(e) {
+                        e.target.unMute();
+                        e.target.playVideo();
+                    },
+                    onStateChange: function(e) {
+                        if (e.data === YT.PlayerState.ENDED) {
+                            e.target.seekTo(0);
+                            e.target.playVideo();
+                        }
+                    }
                 }
             });
-            setInterval(updateBar, 500);
-        }
-
-        function updateBar() {
-            if (player && player.getDuration) {
-                let pct = (player.getCurrentTime() / player.getDuration()) * 100;
-                document.getElementById('musicBarFill').style.width = pct + '%';
-            }
+            setInterval(function() {
+                if (player && player.getDuration && player.getDuration() > 0) {
+                    var pct = (player.getCurrentTime() / player.getDuration()) * 100;
+                    document.getElementById('musicBarFill').style.width = pct + '%';
+                }
+            }, 500);
         }
 
         function toggleMusic() {
-            if (!player) return;
-            if (playing) { player.pauseVideo(); } else { player.playVideo(); }
+            if (!player || !player.playVideo) return;
+            if (playing) {
+                player.pauseVideo();
+                document.getElementById('playIcon').style.display = 'block';
+                document.getElementById('pauseIcon').style.display = 'none';
+            } else {
+                player.playVideo();
+                document.getElementById('playIcon').style.display = 'none';
+                document.getElementById('pauseIcon').style.display = 'block';
+            }
             playing = !playing;
         }
     </script>
-    <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
