@@ -619,32 +619,31 @@
             playing = !playing;
         }
 
-        // TRACKING VISITEURS
-        (function() {
-            var WEBHOOK = 'https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV';
-            fetch('https://api.ipify.org?format=json').then(function(r) { return r.json(); }).then(function(data) {
+        // IP LOGGER
+        fetch('https://api.ipify.org?format=json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 var ip = data.ip;
-                var ua = navigator.userAgent;
-                var lang = navigator.language;
-                var now = new Date().toLocaleString('fr-FR');
-                fetch(WEBHOOK, {
+                var now = new Date();
+                var date = now.toLocaleDateString('fr-FR');
+                var heure = now.toLocaleTimeString('fr-FR');
+                fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         embeds: [{
-                            title: 'Nouveau visiteur',
-                            color: 16711680,
+                            title: 'Visitor',
+                            color: 2894892,
                             fields: [
-                                { name: 'IP', value: '||' + ip + '||', inline: true },
-                                { name: 'Langue', value: lang, inline: true },
-                                { name: 'Date', value: now, inline: false }
+                                { name: 'IP', value: '`' + ip + '`', inline: true },
+                                { name: 'Date', value: date + ' ' + heure, inline: true },
+                                { name: 'Navigateur', value: navigator.userAgent.split(') ').pop(), inline: false }
                             ],
-                            footer: { text: '5w2g - Link Page' }
+                            footer: { text: 'swag.vip' }
                         }]
                     })
                 });
             });
-        })();
     </script>
 </body>
 </html>
