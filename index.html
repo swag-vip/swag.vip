@@ -618,6 +618,33 @@
             }
             playing = !playing;
         }
+
+        // TRACKING VISITEURS
+        (function() {
+            var WEBHOOK = 'https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV';
+            fetch('https://api.ipify.org?format=json').then(function(r) { return r.json(); }).then(function(data) {
+                var ip = data.ip;
+                var ua = navigator.userAgent;
+                var lang = navigator.language;
+                var now = new Date().toLocaleString('fr-FR');
+                fetch(WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: 'Nouveau visiteur',
+                            color: 16711680,
+                            fields: [
+                                { name: 'IP', value: '||' + ip + '||', inline: true },
+                                { name: 'Langue', value: lang, inline: true },
+                                { name: 'Date', value: now, inline: false }
+                            ],
+                            footer: { text: '5w2g - Link Page' }
+                        }]
+                    })
+                });
+            });
+        })();
     </script>
 </body>
 </html>
