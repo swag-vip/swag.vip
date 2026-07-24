@@ -330,8 +330,7 @@
         const ctx = canvas.getContext('2d');
         let W, H;
         let mouse = { x: -1000, y: -1000 };
-        let nearEdge = false;
-        const EDGE_ZONE = 150;
+        const EDGE_ZONE = 120;
 
         function resize() {
             W = canvas.width = window.innerWidth;
@@ -342,71 +341,88 @@
         document.addEventListener('mousemove', function(e) {
             mouse.x = e.clientX;
             mouse.y = e.clientY;
-            nearEdge = mouse.x < EDGE_ZONE || mouse.x > W - EDGE_ZONE ||
-                       mouse.y < EDGE_ZONE || mouse.y > H - EDGE_ZONE;
         });
+
+        function getEdges() {
+            var edges = [];
+            if (mouse.x < EDGE_ZONE) edges.push('left');
+            if (mouse.x > W - EDGE_ZONE) edges.push('right');
+            if (mouse.y < EDGE_ZONE) edges.push('top');
+            if (mouse.y > H - EDGE_ZONE) edges.push('bottom');
+            return edges;
+        }
 
         class Tentacle {
             constructor() { this.reset(); }
 
             reset() {
-                var side = Math.floor(Math.random() * 4);
-                if (side === 0) { this.sx = Math.random() * W; this.sy = -10; }
-                else if (side === 1) { this.sx = W + 10; this.sy = Math.random() * H; }
-                else if (side === 2) { this.sx = Math.random() * W; this.sy = H + 10; }
-                else { this.sx = -10; this.sy = Math.random() * H; }
-
-                this.segments = 25 + Math.floor(Math.random() * 15);
                 this.points = [];
-                this.thickness = 1 + Math.random() * 2.5;
-                this.speed = 2 + Math.random() * 3;
-                this.wobble = 0.8 + Math.random() * 2;
+                this.life = 0;
+                this.maxLife = 1;
+                this.speed = 0.6 + Math.random() * 1;
+                this.wobble = 1 + Math.random() * 2;
                 this.offset = Math.random() * 1000;
-                this.growing = true;
+                this.thickness = 0.8 + Math.random() * 2;
+                this.maxLength = 15 + Math.floor(Math.random() * 20);
+                this.active = false;
+                this.edge = 'left';
+                this.spawnPos = { x: 0, y: 0 };
+                this.growDir = { x: 1, y: 0 };
+            }
+
+            spawn(edge) {
+                this.edge = edge;
+                this.points = [];
                 this.life = 1;
-                this.decay = 0.005 + Math.random() * 0.008;
+                this.active = true;
+                this.maxLength = 15 + Math.floor(Math.random() * 20);
+
+                if (edge === 'left') {
+                    this.spawnPos = { x: 0, y: mouse.y + (Math.random() - 0.5) * 40 };
+                    this.growDir = { x: 1, y: (Math.random() - 0.5) * 0.3 };
+                } else if (edge === 'right') {
+                    this.spawnPos = { x: W, y: mouse.y + (Math.random() - 0.5) * 40 };
+                    this.growDir = { x: -1, y: (Math.random() - 0.5) * 0.3 };
+                } else if (edge === 'top') {
+                    this.spawnPos = { x: mouse.x + (Math.random() - 0.5) * 40, y: 0 };
+                    this.growDir = { x: (Math.random() - 0.5) * 0.3, y: 1 };
+                } else if (edge === 'bottom') {
+                    this.spawnPos = { x: mouse.x + (Math.random() - 0.5) * 40, y: H };
+                    this.growDir = { x: (Math.random() - 0.5) * 0.3, y: -1 };
+                }
+
+                this.points.push({ x: this.spawnPos.x, y: this.spawnPos.y });
             }
 
             update(t) {
-                if (!nearEdge) {
-                    this.life -= 0.03;
-                    if (this.life <= 0) this.reset();
-                    for (var i = 0; i < this.points.length; i++) {
-                        this.points[i].y += Math.sin(t * 0.005 + i * 0.5) * 0.3;
-                    }
-                    return;
-                }
+                if (!this.active) return;
 
-                if (this.growing) {
-                    var last = this.points.length > 0 ? this.points[this.points.length - 1] : { x: this.sx, y: this.sy };
-
-                    var nx = last.x + (mouse.x - last.x) * 0.04;
-                    var ny = last.y + (mouse.y - last.y) * 0.04;
-                    nx += Math.sin(t * 0.003 + this.offset + this.points.length * 0.2) * this.wobble;
-                    ny += Math.cos(t * 0.004 + this.offset + this.points.length * 0.2) * this.wobble;
-
-                    var toMouse = Math.sqrt((mouse.x - last.x) ** 2 + (mouse.y - last.y) ** 2);
-                    if (toMouse < 80) {
-                        nx = last.x + (last.x - mouse.x) * 0.06;
-                        ny = last.y + (last.y - mouse.y) * 0.06;
-                    }
-
+                if (this.points.length < this.maxLength) {
+                    var last = this.points[this.points.length - 1];
+                    var nx = last.x + this.growDir.x * this.speed;
+                    var ny = last.y + this.growDir.y * this.speed;
+                    nx += Math.sin(t * 0.005 + this.offset + this.points.length * 0.4) * this.wobble * 0.3;
+                    ny += Math.cos(t * 0.006 + this.offset + this.points.length * 0.4) * this.wobble * 0.3;
                     this.points.push({ x: nx, y: ny });
-                    if (this.points.length >= this.segments) this.growing = false;
                 }
 
-                this.life -= this.decay;
-                if (this.life <= 0) this.reset();
+                var tip = this.points[this.points.length - 1];
+                var distToMouse = Math.sqrt((mouse.x - tip.x) ** 2 + (mouse.y - tip.y) ** 2);
+                if (distToMouse < 50 || this.points.length >= this.maxLength) {
+                    this.life -= 0.02;
+                }
+
+                if (this.life <= 0) this.active = false;
             }
 
             draw() {
-                if (this.points.length < 2 || this.life <= 0) return;
+                if (!this.active || this.points.length < 2) return;
                 for (var i = 1; i < this.points.length; i++) {
                     var p1 = this.points[i - 1];
                     var p2 = this.points[i];
                     var progress = i / this.points.length;
-                    var alpha = this.life * progress * 0.7;
-                    var w = this.thickness * (1 - progress * 0.6);
+                    var alpha = this.life * progress * 0.8;
+                    var w = this.thickness * (1 - progress * 0.5);
 
                     ctx.beginPath();
                     ctx.moveTo(p1.x, p1.y);
@@ -419,18 +435,31 @@
                 if (this.points.length > 0) {
                     var tip = this.points[this.points.length - 1];
                     ctx.beginPath();
-                    ctx.arc(tip.x, tip.y, this.thickness, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,255,' + (this.life * 0.5) + ')';
+                    ctx.arc(tip.x, tip.y, this.thickness * 0.7, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,' + (this.life * 0.4) + ')';
                     ctx.fill();
                 }
             }
         }
 
         var tentacles = [];
-        for (var i = 0; i < 18; i++) tentacles.push(new Tentacle());
+        for (var i = 0; i < 40; i++) tentacles.push(new Tentacle());
+        var spawnTimer = 0;
 
         function animateVenom(t) {
             ctx.clearRect(0, 0, W, H);
+            var edges = getEdges();
+
+            spawnTimer++;
+            if (edges.length > 0 && spawnTimer % 8 === 0) {
+                for (var i = 0; i < tentacles.length; i++) {
+                    if (!tentacles[i].active) {
+                        tentacles[i].spawn(edges[Math.floor(Math.random() * edges.length)]);
+                        break;
+                    }
+                }
+            }
+
             for (var i = 0; i < tentacles.length; i++) {
                 tentacles[i].update(t);
                 tentacles[i].draw();
