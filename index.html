@@ -387,22 +387,22 @@
 
         .profile-toggle {
             position: fixed; top: 20px; right: 20px; z-index: 90;
-            width: 42px; height: 42px; border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
             cursor: pointer; display: none; align-items: center; justify-content: center;
             transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
-            overflow: hidden;
+            overflow: hidden; opacity: 0.4;
         }
 
         .profile-toggle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
         .profile-toggle.has-img img { opacity: 1; }
-        .profile-toggle .toggle-icon { color: rgba(255,255,255,0.7); font-size: 18px; transition: opacity 0.3s; position: absolute; }
+        .profile-toggle .toggle-icon { color: rgba(255,255,255,0.6); font-size: 15px; transition: opacity 0.3s; position: absolute; }
         .profile-toggle.has-img .toggle-icon { opacity: 0; }
 
         .profile-toggle:hover {
-            transform: scale(1.1); border-color: rgba(255,255,255,0.4);
-            box-shadow: 0 0 25px rgba(255,255,255,0.1);
+            transform: scale(1.1); border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 0 20px rgba(255,255,255,0.08); opacity: 0.8;
         }
 
         .profile-overlay {
@@ -595,7 +595,7 @@
             </div>
         </div>
         <div class="panel-section">
-            <div class="panel-label">Envoyer un message</div>
+            <div class="panel-label">Laisser un message a 5w2g</div>
             <textarea class="msg-textarea" id="msgInput" placeholder="Ecris ton message..." maxlength="500"></textarea>
             <button class="msg-send" onclick="sendMessage()">Envoyer</button>
             <div class="msg-status" id="msgStatus"></div>
