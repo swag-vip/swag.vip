@@ -720,7 +720,7 @@
     <div class="chat-overlay" id="chatOverlay" onclick="toggleChat()"></div>
     <div class="chat-panel" id="chatPanel">
         <div class="chat-header">
-            <span class="chat-header-title">Chat public</span>
+            <span class="chat-header-title">chat</span>
             <button class="chat-close" onclick="toggleChat()">&times;</button>
         </div>
         <div class="chat-notice" id="chatNotice">Tu peux envoyer un seul message pendant ta visite.</div>
@@ -1360,7 +1360,7 @@
         if (visitorPseudo) initLogger();
 
         // CHAT PUBLIC
-        var CHAT_DB = 'https://swag-vip-chat-default-rtdb.firebaseio.com';
+        var CHAT_DB = 'https://swag-chat-cf93e-default-rtdb.firebaseio.com';
         var chatSent = localStorage.getItem('chatSent_' + ip) === '1';
 
         function toggleChat() {
