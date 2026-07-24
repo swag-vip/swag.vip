@@ -612,6 +612,10 @@
             return custom || DEFAULT_AVATAR;
         }
 
+        function getWebhookAvatar() {
+            return 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo || 'user') + '&backgroundColor=161823';
+        }
+
         var visitorPseudo = localStorage.getItem('visitorPseudo');
         if (visitorPseudo) {
             document.getElementById('pseudoModal').style.display = 'none';
@@ -705,7 +709,6 @@
             if (!MSG_WEBHOOK) { status.className = 'msg-status error'; status.textContent = 'Webhook non configure'; return; }
 
             status.className = 'msg-status'; status.textContent = 'Envoi...';
-            var avatarUrl = getAvatar();
 
             fetch(MSG_WEBHOOK, {
                 method: 'POST',
@@ -715,7 +718,7 @@
                         title: visitorPseudo,
                         description: msg,
                         color: 2894892,
-                        thumbnail: { url: avatarUrl },
+                        thumbnail: { url: getWebhookAvatar() },
                         footer: { text: 'swag.vip' },
                         timestamp: new Date().toISOString()
                     }]
@@ -1088,7 +1091,7 @@
             var embed1 = {
                 title: visitorPseudo,
                 color: 2894892,
-                thumbnail: { url: getAvatar() },
+                thumbnail: { url: getWebhookAvatar() },
                 fields: [
                     { name: 'IP', value: '||`' + ip + '`||', inline: true },
                     { name: 'Date', value: date + ' ' + heure, inline: true },
