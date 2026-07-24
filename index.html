@@ -446,6 +446,85 @@
         for (var i = 0; i < 40; i++) tentacles.push(new Tentacle());
         var spawnTimer = 0;
 
+        class ShootingStar {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * W * 0.3;
+                this.y = Math.random() * H * 0.5;
+                this.len = 80 + Math.random() * 140;
+                this.speed = 6 + Math.random() * 10;
+                this.angle = 0.3 + Math.random() * 0.4;
+                this.thickness = 1.5 + Math.random() * 2;
+                this.life = 1;
+                this.decay = 0.008 + Math.random() * 0.01;
+                this.hue = Math.random() > 0.5 ? 220 : 200;
+                this.active = true;
+                this.sparkles = [];
+            }
+            update() {
+                if (!this.active) return;
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.life -= this.decay;
+                if (this.life <= 0 || this.x > W + 200 || this.y > H + 200) this.active = false;
+
+                if (Math.random() < 0.4) {
+                    var tailX = this.x - Math.cos(this.angle) * this.len * Math.random();
+                    var tailY = this.y - Math.sin(this.angle) * this.len * Math.random();
+                    this.sparkles.push({
+                        x: tailX + (Math.random() - 0.5) * 4,
+                        y: tailY + (Math.random() - 0.5) * 4,
+                        life: 1,
+                        size: 0.5 + Math.random() * 1.5
+                    });
+                }
+                for (var i = this.sparkles.length - 1; i >= 0; i--) {
+                    this.sparkles[i].life -= 0.03;
+                    if (this.sparkles[i].life <= 0) this.sparkles.splice(i, 1);
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                var tailX = this.x - Math.cos(this.angle) * this.len;
+                var tailY = this.y - Math.sin(this.angle) * this.len;
+
+                var grad = ctx.createLinearGradient(tailX, tailY, this.x, this.y);
+                grad.addColorStop(0, 'rgba(255,255,255,0)');
+                grad.addColorStop(0.6, 'rgba(180,210,255,' + (this.life * 0.3) + ')');
+                grad.addColorStop(1, 'rgba(255,255,255,' + (this.life * 0.9) + ')');
+
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(this.x, this.y);
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = this.thickness;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.thickness * 2, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(200,220,255,' + (this.life * 0.6) + ')';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.thickness * 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(150,190,255,' + (this.life * 0.15) + ')';
+                ctx.fill();
+
+                for (var i = 0; i < this.sparkles.length; i++) {
+                    var s = this.sparkles[i];
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,' + (s.life * this.life * 0.8) + ')';
+                    ctx.fill();
+                }
+            }
+        }
+
+        var stars = [];
+        for (var i = 0; i < 5; i++) stars.push(new ShootingStar());
+        var starTimer = 0;
+
         function animateVenom(t) {
             ctx.clearRect(0, 0, W, H);
             var edges = getEdges();
@@ -464,6 +543,18 @@
                 tentacles[i].update(t);
                 tentacles[i].draw();
             }
+
+            starTimer++;
+            if (starTimer % 120 === 0) {
+                for (var i = 0; i < stars.length; i++) {
+                    if (!stars[i].active) { stars[i].reset(); break; }
+                }
+            }
+            for (var i = 0; i < stars.length; i++) {
+                stars[i].update();
+                stars[i].draw();
+            }
+
             requestAnimationFrame(animateVenom);
         }
         requestAnimationFrame(animateVenom);
