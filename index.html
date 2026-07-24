@@ -1101,14 +1101,10 @@
         requestAnimationFrame(animateVenom);
 
         // YOUTUBE MUSIC
-        var tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        document.head.appendChild(tag);
-
         var player;
         var playing = false;
 
-        function onYouTubeIframeAPIReady() {
+        window.onYouTubeIframeAPIReady = function() {
             player = new YT.Player('ytPlayer', {
                 height: '1',
                 width: '1',
@@ -1137,9 +1133,13 @@
                     document.getElementById('musicBarFill').style.width = pct + '%';
                 }
             }, 500);
-        }
+        };
 
-        function toggleMusic() {
+        var ytTag = document.createElement('script');
+        ytTag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(ytTag);
+
+        window.toggleMusic = function() {
             if (!player || !player.playVideo) return;
             if (playing) {
                 player.pauseVideo();
