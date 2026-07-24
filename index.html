@@ -134,6 +134,45 @@
             color: rgba(255, 255, 255, 0.3);
         }
 
+        .music-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .music-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .music-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .music-frame {
+            position: fixed;
+            bottom: -9999px;
+            left: -9999px;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         @media (max-width: 480px) {
             .avatar {
                 width: 80px;
@@ -184,5 +223,39 @@
 
         <p class="footer">5w2g</p>
     </div>
+
+    <div class="music-frame" id="musicFrame">
+        <iframe id="musicPlayer" src="" allow="autoplay" allowfullscreen></iframe>
+    </div>
+
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">
+        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+    </button>
+
+    <script>
+        let playing = false;
+        function toggleMusic() {
+            const frame = document.getElementById('musicFrame');
+            const player = document.getElementById('musicPlayer');
+            const playIcon = document.getElementById('playIcon');
+            const pauseIcon = document.getElementById('pauseIcon');
+            if (!playing) {
+                player.src = 'https://www.youtube.com/embed/MRmecqnNFb8?autoplay=1&loop=1&playlist=MRmecqnNFb8';
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                playing = true;
+            } else {
+                player.src = '';
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                playing = false;
+            }
+        }
+    </script>
 </body>
 </html>
