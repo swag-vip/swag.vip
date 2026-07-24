@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-logo">
+                    <div class="logo-icon"><i class="fab fa-discord"></i></div>
+                    <h1>Bot Dashboard</h1>
+                    <p>Contrôle total de ton bot Discord</p>
+                </div>
+                <div class="login-form">
+                    <div class="input-group">
+                        <label><i class="fas fa-key"></i> API Key</label>
+                        <input type="password" id="api-key" placeholder="Ta clé API du backend" autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fas fa-server"></i> URL du Backend</label>
+                        <input type="text" id="backend-url" placeholder="https://ton-backend.vercel.app" value="http://localhost:5000">
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="login()">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                    <div class="login-divider"><span>ou</span></div>
+                    <button class="btn btn-discord btn-full" onclick="discordLogin()">
+                        <i class="fab fa-discord"></i> Connexion Discord OAuth2
+                    </button>
+                    <div id="login-error" class="error-msg hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="screen">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="bot-avatar" id="bot-avatar">
+                    <i class="fab fa-discord"></i>
+                </div>
+                <div class="bot-info">
+                    <h3 id="bot-name">Bot</h3>
+                    <span class="status-badge online" id="bot-status">En ligne</span>
+                </div>
+            </div>
+
+            <div class="bot-selector">
+                <label>Bot Actif</label>
+                <select id="active-bot-token" onchange="switchBot(this.value)">
+                    <option value="">Sélectionner un bot...</option>
+                </select>
+                <button class="btn btn-sm btn-success" onclick="showAddBotModal()">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-section">TABLEAU DE BORD</li>
+                <li class="nav-item active" data-page="overview">
+                    <i class="fas fa-home"></i><span>Vue d'ensemble</span>
+                </li>
+                <li class="nav-item" data-page="bots">
+                    <i class="fas fa-robot"></i><span>Mes Bots</span>
+                </li>
+
+                <li class="nav-section">MODÉRATION</li>
+                <li class="nav-item" data-page="moderation">
+                    <i class="fas fa-shield-alt"></i><span>Modération</span>
+                </li>
+                <li class="nav-item" data-page="automod">
+                    <i class="fas fa-robot"></i><span>Auto-Modération</span>
+                </li>
+                <li class="nav-item" data-page="warnings">
+                    <i class="fas fa-exclamation-triangle"></i><span>Avertissements</span>
+                </li>
+
+                <li class="nav-section">GESTION</li>
+                <li class="nav-item" data-page="welcome">
+                    <i class="fas fa-hand-wave"></i><span>Welcome / Goodbye</span>
+                </li>
+                <li class="nav-item" data-page="roles">
+                    <i class="fas fa-users"></i><span>Rôles</span>
+                </li>
+                <li class="nav-item" data-page="channels">
+                    <i class="fas fa-comments"></i><span>Salons</span>
+                </li>
+                <li class="nav-item" data-page="reactionroles">
+                    <i class="fas fa-hand-pointer"></i><span>Reaction Roles</span>
+                </li>
+
+                <li class="nav-section">COMMUNAUTÉ</li>
+                <li class="nav-item" data-page="levels">
+                    <i class="fas fa-chart-line"></i><span>Niveaux / XP</span>
+                </li>
+                <li class="nav-item" data-page="giveaways">
+                    <i class="fas fa-gift"></i><span>Giveaways</span>
+                </li>
+                <li class="nav-item" data-page="tickets">
+                    <i class="fas fa-ticket-alt"></i><span>Tickets</span>
+                </li>
+
+                <li class="nav-section">OUTILS</li>
+                <li class="nav-item" data-page="logs">
+                    <i class="fas fa-clipboard-list"></i><span>Logs</span>
+                </li>
+                <li class="nav-item" data-page="embeds">
+                    <i class="fas fa-palette"></i><span>Embed Builder</span>
+                </li>
+                <li class="nav-item" data-page="commands">
+                    <i class="fas fa-terminal"></i><span>Commandes</span>
+                </li>
+
+                <li class="nav-section">CONFIG</li>
+                <li class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i><span>Paramètres</span>
+                </li>
+                <li class="nav-item" data-page="console">
+                    <i class="fas fa-terminal"></i><span>Console</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Rechercher une commande..." id="search-input" onkeyup="filterCommands(this.value)">
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-icon" onclick="refreshData()" title="Rafraîchir">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div class="notification-bell" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notif-badge">0</span>
+                    </div>
+                    <div class="user-menu">
+                        <img id="user-avatar" src="" alt="User">
+                        <span id="user-name">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="content-area">
+                <!-- Pages loaded dynamically -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal</h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

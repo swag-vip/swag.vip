@@ -1,0 +1,5 @@
+[build]
+  build = "pip install -r requirements-full.txt"
+
+[process]
+  web = "python backend.py"

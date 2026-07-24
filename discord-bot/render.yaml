@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: discord-bot-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-full.txt
+    startCommand: python backend.py
+    envVars:
+      - key: API_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11"
