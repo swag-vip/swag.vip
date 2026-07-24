@@ -1,0 +1,11 @@
+__pycache__/
+*.py
+*.pyw
+*.spec
+*.ico
+*.vbs
+*.bat
+build/
+dist/
+.icon_cache/
+Discord-Custom-RPC/
