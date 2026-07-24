@@ -796,6 +796,7 @@
             panelImg.style.display = 'block';
             document.getElementById('panelAvatarPlaceholder').style.display = 'none';
             document.getElementById('panelName').textContent = visitorPseudo;
+            document.getElementById('chatToggle').style.display = 'flex';
         }
 
         function uploadAvatar(e) {
@@ -1377,10 +1378,11 @@
         }
 
         function loadChat() {
+            var container = document.getElementById('chatMessages');
+            container.innerHTML = '<div class="chat-sent-notice">Chargement...</div>';
             fetch(CHAT_DB + '/chat.json')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    var container = document.getElementById('chatMessages');
                     container.innerHTML = '';
                     if (!data) { container.innerHTML = '<div class="chat-sent-notice">Aucun message pour le moment.</div>'; return; }
                     var keys = Object.keys(data).sort();
@@ -1398,7 +1400,9 @@
                     }
                     container.scrollTop = container.scrollHeight;
                 })
-                .catch(function() {});
+                .catch(function(e) {
+                    container.innerHTML = '<div class="chat-sent-notice">Erreur de connexion au chat.</div>';
+                });
         }
 
         function escapeHtml(t) {
