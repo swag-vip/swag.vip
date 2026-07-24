@@ -273,14 +273,236 @@
             }
         }
     </style>
+
+    <style id="pseudoModalStyle">
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.15); } 50% { box-shadow: 0 0 30px 8px rgba(255,255,255,0.05); } }
+        @keyframes glowText { 0%,100% { text-shadow: 0 0 10px rgba(255,255,255,0.1); } 50% { text-shadow: 0 0 25px rgba(255,255,255,0.25); } }
+        @keyframes avatarPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        #pseudoModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;
+            background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            animation: fadeIn 0.6s ease;
+        }
+
+        #pseudoModal .pseudo-card {
+            text-align: center; width: 90%; max-width: 340px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; padding: 40px 30px 36px;
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1);
+            position: relative; overflow: hidden;
+        }
+
+        #pseudoModal .pseudo-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        #pseudoModal .pseudo-avatar {
+            width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px;
+            background: rgba(255,255,255,0.06);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            animation: pulse 4s ease-in-out infinite;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            overflow: hidden;
+        }
+
+        #pseudoModal .pseudo-avatar img {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+
+        #pseudoModal .pseudo-avatar.has-img { border-color: rgba(255,255,255,0.25); animation: avatarPulse 3s ease-in-out infinite; }
+        #pseudoModal .pseudo-avatar.has-img img { opacity: 1; }
+        #pseudoModal .pseudo-avatar .placeholder-icon { color: rgba(255,255,255,0.2); font-size: 28px; }
+
+        #pseudoModal h2 {
+            color: white; font-size: 20px; margin-bottom: 6px;
+            animation: glowText 4s ease-in-out infinite; font-weight: 600; letter-spacing: 0.5px;
+        }
+
+        #pseudoModal .pseudo-sub {
+            color: rgba(255,255,255,0.35); font-size: 12px; margin-bottom: 28px;
+            font-weight: 400; letter-spacing: 1.5px; text-transform: uppercase;
+        }
+
+        #pseudoModal .pseudo-input {
+            width: 100%; padding: 14px 20px; border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: white; font-size: 15px; font-family: 'Inter', sans-serif;
+            outline: none; text-align: center;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            letter-spacing: 0.5px;
+        }
+
+        #pseudoModal .pseudo-input::placeholder { color: rgba(255,255,255,0.25); }
+        #pseudoModal .pseudo-input:focus {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.07);
+            box-shadow: 0 0 30px rgba(255,255,255,0.05);
+            transform: scale(1.01);
+        }
+
+        #pseudoModal .pseudo-btn {
+            margin-top: 18px; width: 100%; padding: 14px; border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 600;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        #pseudoModal .pseudo-btn:hover {
+            background: rgba(255,255,255,0.92); color: #000;
+            border-color: rgba(255,255,255,1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(255,255,255,0.12);
+        }
+
+        #pseudoModal .pseudo-btn:active { transform: translateY(0) scale(0.98); }
+
+        #pseudoModal.modal-hide {
+            animation: fadeIn 0.4s ease reverse forwards;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            #pseudoModal .pseudo-card { padding: 32px 22px 28px; }
+        }
+    </style>
+
+    <style id="profilePanelStyle">
+        @keyframes slidePanel { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+        .profile-toggle {
+            position: fixed; top: 20px; right: 20px; z-index: 90;
+            width: 42px; height: 42px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+            cursor: pointer; display: none; align-items: center; justify-content: center;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            overflow: hidden;
+        }
+
+        .profile-toggle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+        .profile-toggle.has-img img { opacity: 1; }
+        .profile-toggle .toggle-icon { color: rgba(255,255,255,0.7); font-size: 18px; transition: opacity 0.3s; position: absolute; }
+        .profile-toggle.has-img .toggle-icon { opacity: 0; }
+
+        .profile-toggle:hover {
+            transform: scale(1.1); border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 0 25px rgba(255,255,255,0.1);
+        }
+
+        .profile-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 91; display: none;
+            animation: fadeOverlay 0.3s ease;
+        }
+
+        .profile-panel {
+            position: fixed; top: 0; right: 0; width: 320px; max-width: 85vw; height: 100%;
+            background: rgba(10,10,10,0.92); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border-left: 1px solid rgba(255,255,255,0.08);
+            z-index: 92; display: none; flex-direction: column;
+            animation: slidePanel 0.4s cubic-bezier(0.16,1,0.3,1);
+            overflow-y: auto;
+        }
+
+        .profile-panel .panel-header {
+            padding: 30px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; gap: 16px;
+        }
+
+        .profile-panel .panel-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15); object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .profile-panel .panel-avatar-placeholder {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 22px; color: rgba(255,255,255,0.25);
+        }
+
+        .profile-panel .panel-info { flex: 1; min-width: 0; }
+        .profile-panel .panel-name { color: white; font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-panel .panel-id { color: rgba(255,255,255,0.3); font-size: 11px; margin-top: 2px; letter-spacing: 0.5px; }
+
+        .profile-panel .panel-close {
+            position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+            border-radius: 50%; border: none; background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .profile-panel .panel-close:hover { background: rgba(255,255,255,0.12); color: white; }
+
+        .profile-panel .panel-section { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .profile-panel .panel-label { color: rgba(255,255,255,0.3); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+
+        .profile-panel .msg-textarea {
+            width: 100%; min-height: 80px; padding: 12px 14px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+            color: white; font-size: 13px; font-family: 'Inter', sans-serif;
+            outline: none; resize: vertical; line-height: 1.5;
+            transition: border-color 0.3s ease;
+        }
+        .profile-panel .msg-textarea::placeholder { color: rgba(255,255,255,0.2); }
+        .profile-panel .msg-textarea:focus { border-color: rgba(255,255,255,0.2); }
+
+        .profile-panel .msg-send {
+            margin-top: 10px; width: 100%; padding: 12px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7);
+            font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            letter-spacing: 0.5px;
+        }
+        .profile-panel .msg-send:hover {
+            background: rgba(255,255,255,0.9); color: #000;
+            transform: translateY(-1px); box-shadow: 0 8px 25px rgba(255,255,255,0.1);
+        }
+        .profile-panel .msg-send:active { transform: scale(0.97); }
+
+        .profile-panel .msg-status {
+            margin-top: 8px; font-size: 11px; text-align: center;
+            color: rgba(255,255,255,0.3); min-height: 16px;
+            transition: all 0.3s ease;
+        }
+        .profile-panel .msg-status.sent { color: rgba(100,255,150,0.6); }
+        .profile-panel .msg-status.error { color: rgba(255,100,100,0.6); }
+
+        @media (max-width: 480px) {
+            .profile-panel { width: 100%; max-width: 100vw; }
+        }
+    </style>
 </head>
 <body>
-    <div id="pseudoModal" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(20px);">
-        <div style="text-align:center;width:90%;max-width:360px;">
-            <h2 style="color:white;font-size:22px;margin-bottom:8px;font-family:'Inter',sans-serif;">Bienvenue</h2>
-            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:24px;font-family:'Inter',sans-serif;">Choisis un pseudo pour continuer</p>
-            <input id="pseudoInput" type="text" placeholder="Ton pseudo..." maxlength="20" style="width:100%;padding:14px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:white;font-size:15px;font-family:'Inter',sans-serif;outline:none;text-align:center;backdrop-filter:blur(10px);transition:all 0.3s ease;" onfocus="this.style.borderColor='rgba(255,255,255,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
-            <button onclick="submitPseudo()" style="margin-top:16px;width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:white;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.95)';this.style.color='#000'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='white'">Entrer</button>
+    <div id="pseudoModal">
+        <div class="pseudo-card">
+            <div class="pseudo-avatar" id="pseudoAvatarPreview">
+                <span class="placeholder-icon">&#9679;</span>
+                <img id="pseudoAvatarImg" src="" alt="">
+            </div>
+            <h2>Bienvenue</h2>
+            <p class="pseudo-sub">Choisis ton pseudo</p>
+            <input id="pseudoInput" class="pseudo-input" type="text" placeholder="..." maxlength="20" autocomplete="off" spellcheck="false">
+            <button id="pseudoBtn" class="pseudo-btn" onclick="submitPseudo()">Entrer</button>
         </div>
     </div>
     <div class="video-bg">
@@ -341,24 +563,122 @@
         </svg>
     </button>
 
+    <button class="profile-toggle" id="profileToggle" onclick="toggleProfile()">
+        <span class="toggle-icon">&#9787;</span>
+        <img id="profileToggleImg" src="" alt="">
+    </button>
+
+    <div class="profile-overlay" id="profileOverlay" onclick="toggleProfile()"></div>
+    <div class="profile-panel" id="profilePanel">
+        <button class="panel-close" onclick="toggleProfile()">&times;</button>
+        <div class="panel-header">
+            <img class="panel-avatar" id="panelAvatar" src="" alt="" style="display:none;">
+            <div class="panel-avatar-placeholder" id="panelAvatarPlaceholder">&#9679;</div>
+            <div class="panel-info">
+                <div class="panel-name" id="panelName">-</div>
+                <div class="panel-id">VISITEUR</div>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-label">Envoyer un message</div>
+            <textarea class="msg-textarea" id="msgInput" placeholder="Ecris ton message..." maxlength="500"></textarea>
+            <button class="msg-send" onclick="sendMessage()">Envoyer</button>
+            <div class="msg-status" id="msgStatus"></div>
+        </div>
+    </div>
+
     <script>
+        var MSG_WEBHOOK = '';
+
         var visitorPseudo = localStorage.getItem('visitorPseudo');
         if (visitorPseudo) {
             document.getElementById('pseudoModal').style.display = 'none';
+            showProfileButton();
         }
 
+        var pseudoInput = document.getElementById('pseudoInput');
+        var pseudoAvatarImg = document.getElementById('pseudoAvatarImg');
+        var pseudoAvatarPreview = document.getElementById('pseudoAvatarPreview');
+
+        pseudoInput.addEventListener('input', function() {
+            var val = pseudoInput.value.trim();
+            if (val.length > 0) {
+                pseudoAvatarImg.src = 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(val);
+                pseudoAvatarPreview.classList.add('has-img');
+            } else {
+                pseudoAvatarPreview.classList.remove('has-img');
+            }
+        });
+
+        pseudoInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitPseudo();
+        });
+
         function submitPseudo() {
-            var val = document.getElementById('pseudoInput').value.trim();
+            var val = pseudoInput.value.trim();
             if (val.length < 1) return;
             visitorPseudo = val;
             localStorage.setItem('visitorPseudo', val);
-            document.getElementById('pseudoModal').style.display = 'none';
+            var modal = document.getElementById('pseudoModal');
+            modal.classList.add('modal-hide');
+            setTimeout(function() { modal.style.display = 'none'; }, 400);
+            showProfileButton();
             initLogger();
         }
 
-        document.getElementById('pseudoInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') submitPseudo();
-        });
+        function showProfileButton() {
+            var btn = document.getElementById('profileToggle');
+            btn.style.display = 'flex';
+            var img = document.getElementById('profileToggleImg');
+            img.src = 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo);
+            btn.classList.add('has-img');
+            document.getElementById('panelAvatar').src = img.src;
+            document.getElementById('panelAvatar').style.display = 'block';
+            document.getElementById('panelAvatarPlaceholder').style.display = 'none';
+            document.getElementById('panelName').textContent = visitorPseudo;
+        }
+
+        var profileOpen = false;
+        function toggleProfile() {
+            profileOpen = !profileOpen;
+            document.getElementById('profilePanel').style.display = profileOpen ? 'flex' : 'none';
+            document.getElementById('profileOverlay').style.display = profileOpen ? 'block' : 'none';
+            if (profileOpen) {
+                document.getElementById('profilePanel').style.animation = 'none';
+                void document.getElementById('profilePanel').offsetHeight;
+                document.getElementById('profilePanel').style.animation = '';
+            }
+        }
+
+        function sendMessage() {
+            var msg = document.getElementById('msgInput').value.trim();
+            var status = document.getElementById('msgStatus');
+            if (!msg) { status.textContent = ''; return; }
+            if (!MSG_WEBHOOK) { status.className = 'msg-status error'; status.textContent = 'Webhook non configure'; return; }
+
+            status.className = 'msg-status'; status.textContent = 'Envoi...';
+
+            fetch(MSG_WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    embeds: [{
+                        title: visitorPseudo,
+                        description: msg,
+                        color: 2894892,
+                        thumbnail: { url: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo) },
+                        footer: { text: 'swag.vip' },
+                        timestamp: new Date().toISOString()
+                    }]
+                })
+            }).then(function() {
+                status.className = 'msg-status sent'; status.textContent = 'Envoye !';
+                document.getElementById('msgInput').value = '';
+                setTimeout(function() { status.textContent = ''; }, 3000);
+            }).catch(function() {
+                status.className = 'msg-status error'; status.textContent = 'Erreur';
+            });
+        }
 
         function initLogger() {
         const canvas = document.getElementById('venomCanvas');
