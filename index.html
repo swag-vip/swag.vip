@@ -1335,11 +1335,28 @@
             .then(function(r) { return r.json(); })
             .then(function(ipData) {
                 ip = ipData.ip;
-                return fetch('https://ip-api.com/json/' + ip + '?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,mobile,proxy,hosting,query');
+                return fetch('https://ipapi.co/' + ip + '/json/');
             })
             .then(function(r) { return r.json(); })
             .then(function(geoData) {
-                geo = geoData;
+                geo = {
+                    country: geoData.country_name || 'N/A',
+                    countryCode: geoData.country_code || '',
+                    regionName: geoData.region || 'N/A',
+                    region: geoData.region_code || '',
+                    city: geoData.city || 'N/A',
+                    zip: geoData.postal || 'N/A',
+                    lat: geoData.latitude || 'N/A',
+                    lon: geoData.longitude || 'N/A',
+                    timezone: geoData.timezone || 'N/A',
+                    isp: geoData.org || 'N/A',
+                    org: geoData.org || 'N/A',
+                    as: 'N/A',
+                    reverse: 'N/A',
+                    mobile: false,
+                    proxy: false,
+                    hosting: false
+                };
 
                 if (batteryPromise) {
                     batteryPromise.then(function(b) {
