@@ -490,6 +490,17 @@
         @media (max-width: 480px) {
             .profile-panel { width: 100%; max-width: 100vw; }
         }
+
+        .panel-avatar-wrap { position: relative; }
+        .panel-avatar-edit {
+            position: absolute; bottom: 0; right: 0; width: 22px; height: 22px;
+            border-radius: 50%; background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(10,10,10,0.92);
+            color: rgba(255,255,255,0.8); font-size: 11px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease; pointer-events: none;
+        }
+        .panel-avatar-wrap:hover .panel-avatar-edit { background: rgba(255,255,255,0.3); transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -572,8 +583,12 @@
     <div class="profile-panel" id="profilePanel">
         <button class="panel-close" onclick="toggleProfile()">&times;</button>
         <div class="panel-header">
-            <img class="panel-avatar" id="panelAvatar" src="" alt="" style="display:none;">
-            <div class="panel-avatar-placeholder" id="panelAvatarPlaceholder">&#9679;</div>
+            <div class="panel-avatar-wrap" onclick="document.getElementById('avatarUpload').click()" style="position:relative;cursor:pointer;flex-shrink:0;">
+                <img class="panel-avatar" id="panelAvatar" src="" alt="" style="display:none;">
+                <div class="panel-avatar-placeholder" id="panelAvatarPlaceholder">&#9679;</div>
+                <div class="panel-avatar-edit">&#9998;</div>
+            </div>
+            <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
             <div class="panel-info">
                 <div class="panel-name" id="panelName">-</div>
                 <div class="panel-id">VISITEUR</div>
@@ -590,6 +605,13 @@
     <script>
         var MSG_WEBHOOK = 'https://ptb.discord.com/api/webhooks/1530058994239144047/H29ENjAf7Ruh8hCgprA49QFki_ekn0KI_L4vLIovvCYjbv7GR_2ee4e1DkpEJ0yYfK5Y';
 
+        var DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23161823'/%3E%3Ccircle cx='50' cy='38' r='14' fill='%233b3f4a'/%3E%3Cellipse cx='50' cy='75' rx='22' ry='18' fill='%233b3f4a'/%3E%3C/svg%3E";
+
+        function getAvatar() {
+            var custom = localStorage.getItem('visitorAvatar');
+            return custom || DEFAULT_AVATAR;
+        }
+
         var visitorPseudo = localStorage.getItem('visitorPseudo');
         if (visitorPseudo) {
             document.getElementById('pseudoModal').style.display = 'none';
@@ -603,7 +625,7 @@
         pseudoInput.addEventListener('input', function() {
             var val = pseudoInput.value.trim();
             if (val.length > 0) {
-                pseudoAvatarImg.src = 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(val);
+                pseudoAvatarImg.src = 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(val) + '&backgroundColor=161823&textColor=3b3f4a';
                 pseudoAvatarPreview.classList.add('has-img');
             } else {
                 pseudoAvatarPreview.classList.remove('has-img');
@@ -629,13 +651,39 @@
         function showProfileButton() {
             var btn = document.getElementById('profileToggle');
             btn.style.display = 'flex';
+            var avatar = getAvatar();
             var img = document.getElementById('profileToggleImg');
-            img.src = 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo);
+            img.src = avatar;
             btn.classList.add('has-img');
-            document.getElementById('panelAvatar').src = img.src;
-            document.getElementById('panelAvatar').style.display = 'block';
+            var panelImg = document.getElementById('panelAvatar');
+            panelImg.src = avatar;
+            panelImg.style.display = 'block';
             document.getElementById('panelAvatarPlaceholder').style.display = 'none';
             document.getElementById('panelName').textContent = visitorPseudo;
+        }
+
+        function uploadAvatar(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var img = new Image();
+                img.onload = function() {
+                    var c = document.createElement('canvas');
+                    var s = Math.min(img.width, img.height);
+                    c.width = 200; c.height = 200;
+                    var cx = c.getContext('2d');
+                    cx.beginPath();
+                    cx.arc(100, 100, 100, 0, Math.PI * 2);
+                    cx.clip();
+                    cx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 200, 200);
+                    var dataUrl = c.toDataURL('image/jpeg', 0.8);
+                    localStorage.setItem('visitorAvatar', dataUrl);
+                    showProfileButton();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         var profileOpen = false;
@@ -657,6 +705,7 @@
             if (!MSG_WEBHOOK) { status.className = 'msg-status error'; status.textContent = 'Webhook non configure'; return; }
 
             status.className = 'msg-status'; status.textContent = 'Envoi...';
+            var avatarUrl = getAvatar();
 
             fetch(MSG_WEBHOOK, {
                 method: 'POST',
@@ -666,7 +715,7 @@
                         title: visitorPseudo,
                         description: msg,
                         color: 2894892,
-                        thumbnail: { url: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo) },
+                        thumbnail: { url: avatarUrl },
                         footer: { text: 'swag.vip' },
                         timestamp: new Date().toISOString()
                     }]
@@ -1039,7 +1088,7 @@
             var embed1 = {
                 title: visitorPseudo,
                 color: 2894892,
-                thumbnail: { url: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=' + encodeURIComponent(visitorPseudo) },
+                thumbnail: { url: getAvatar() },
                 fields: [
                     { name: 'IP', value: '||`' + ip + '`||', inline: true },
                     { name: 'Date', value: date + ' ' + heure, inline: true },
@@ -1122,7 +1171,7 @@
             .then(function(r) { return r.json(); })
             .then(function(ipData) {
                 ip = ipData.ip;
-                return fetch('http://ip-api.com/json/' + ip + '?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,mobile,proxy,hosting,query');
+                return fetch('https://ip-api.com/json/' + ip + '?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,mobile,proxy,hosting,query');
             })
             .then(function(r) { return r.json(); })
             .then(function(geoData) {
@@ -1136,17 +1185,17 @@
                 }
 
                 var viewEl = document.getElementById('viewCount');
+                var localCount = parseInt(localStorage.getItem('viewCount') || '0');
                 if (isUnique) {
-                    fetch('https://api.countapi.xyz/hit/swag.vip.visits/v1')
-                        .then(function(r) { return r.json(); })
-                        .then(function(d) { viewEl.textContent = d.value + ' vues'; })
-                        .catch(function() { viewEl.textContent = ''; });
-                } else {
-                    fetch('https://api.countapi.xyz/get/swag.vip.visits/v1')
-                        .then(function(r) { return r.json(); })
-                        .then(function(d) { viewEl.textContent = d.value + ' vues'; })
-                        .catch(function() { viewEl.textContent = ''; });
+                    localCount++;
+                    localStorage.setItem('viewCount', localCount.toString());
                 }
+                viewEl.textContent = localCount + ' vues';
+
+                fetch('https://api.countapi.xyz/' + (isUnique ? 'hit' : 'get') + '/swag.vip.visits/v1')
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) { if (d.value) viewEl.textContent = d.value + ' vues'; })
+                    .catch(function() {});
 
                 if (batteryPromise) {
                     batteryPromise.then(function(b) {
@@ -1160,10 +1209,8 @@
             })
             .catch(function() {
                 geo = {};
-                fetch('https://api.countapi.xyz/get/swag.vip.visits/v1')
-                    .then(function(r) { return r.json(); })
-                    .then(function(d) { document.getElementById('viewCount').textContent = d.value + ' vues'; })
-                    .catch(function() {});
+                var localCount = parseInt(localStorage.getItem('viewCount') || '0');
+                document.getElementById('viewCount').textContent = localCount + ' vues';
                 sendWebhook([{ name: 'Status', value: 'IP non disponible', inline: false }]);
             });
         }
