@@ -69,7 +69,7 @@
         }
 
         @keyframes beatFlash {
-            0% { opacity: 0.15; }
+            0% { opacity: 0.12; }
             100% { opacity: 0; }
         }
 
@@ -79,8 +79,28 @@
         }
 
         @keyframes contentPulse {
-            0% { filter: brightness(1.3); transform: scale(1.01); }
-            100% { filter: brightness(1); transform: scale(1); }
+            0% { filter: brightness(1.2); }
+            100% { filter: brightness(1); }
+        }
+
+        .edge-aura {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            box-shadow: inset 0 0 80px 20px rgba(255,255,255,0.08);
+        }
+
+        .edge-aura.active {
+            animation: auraPulse 0.47s ease-out infinite;
+        }
+
+        @keyframes auraPulse {
+            0% { box-shadow: inset 0 0 100px 30px rgba(255,255,255,0.15); }
+            100% { box-shadow: inset 0 0 60px 10px rgba(0,0,0,0.3); }
         }
 
         .container {
@@ -238,6 +258,7 @@
     </div>
     <div class="overlay"></div>
     <div class="beat-overlay" id="beatOverlay"></div>
+    <div class="edge-aura" id="edgeAura"></div>
     <div class="container">
         <img src="avatar.jpg" alt="5w2g" class="avatar">
         <h1 class="username">5w2g</h1>
@@ -273,11 +294,11 @@
     </div>
 
     <button class="music-btn" id="musicBtn" onclick="toggleMusic()">
-        <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-        </svg>
-        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
         </svg>
     </button>
 
@@ -287,7 +308,7 @@
         document.head.appendChild(tag);
 
         var player;
-        var playing = true;
+        var playing = false;
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('ytPlayer', {
@@ -295,7 +316,7 @@
                 width: '1',
                 videoId: 'MRmecqnNFb8',
                 playerVars: {
-                    autoplay: 1,
+                    autoplay: 0,
                     loop: 1,
                     playlist: 'MRmecqnNFb8',
                     controls: 0,
@@ -305,9 +326,6 @@
                 events: {
                     onReady: function(e) {
                         e.target.unMute();
-                        e.target.playVideo();
-                        document.getElementById('beatOverlay').classList.add('active');
-                        document.body.classList.add('active');
                     },
                     onStateChange: function(e) {
                         if (e.data === YT.PlayerState.ENDED) {
@@ -328,17 +346,20 @@
         function toggleMusic() {
             if (!player || !player.playVideo) return;
             var beat = document.getElementById('beatOverlay');
+            var aura = document.getElementById('edgeAura');
             if (playing) {
                 player.pauseVideo();
                 document.getElementById('playIcon').style.display = 'block';
                 document.getElementById('pauseIcon').style.display = 'none';
                 beat.classList.remove('active');
+                aura.classList.remove('active');
                 document.body.classList.remove('active');
             } else {
                 player.playVideo();
                 document.getElementById('playIcon').style.display = 'none';
                 document.getElementById('pauseIcon').style.display = 'block';
                 beat.classList.add('active');
+                aura.classList.add('active');
                 document.body.classList.add('active');
             }
             playing = !playing;
