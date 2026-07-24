@@ -60,15 +60,26 @@
             height: 100%;
             pointer-events: none;
             z-index: 3;
-            box-shadow:
-                inset 0 0 120px 40px rgba(0,0,0,0.9),
-                inset 0 0 200px 80px rgba(0,0,0,0.5);
-            animation: auraBreath 4s ease-in-out infinite alternate;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+            animation: auraShift 6s ease-in-out infinite alternate;
         }
 
-        @keyframes auraBreath {
-            0% { box-shadow: inset 0 0 100px 30px rgba(0,0,0,0.8), inset 0 0 180px 60px rgba(0,0,0,0.4); }
-            100% { box-shadow: inset 0 0 140px 50px rgba(0,0,0,0.95), inset 0 0 250px 100px rgba(0,0,0,0.6); }
+        @keyframes auraShift {
+            0% {
+                box-shadow:
+                    inset 0 0 120px 40px rgba(0,0,0,0.9),
+                    inset 0 0 200px 80px rgba(0,0,0,0.5);
+            }
+            50% {
+                box-shadow:
+                    inset 0 0 160px 60px rgba(20,20,20,1),
+                    inset 0 0 250px 100px rgba(255,255,255,0.05);
+            }
+            100% {
+                box-shadow:
+                    inset 0 0 100px 30px rgba(0,0,0,0.95),
+                    inset 0 0 180px 60px rgba(255,255,255,0.03);
+            }
         }
 
         #venomCanvas {
@@ -315,11 +326,12 @@
     </button>
 
     <script>
-        // TENTACULES VENOM
         const canvas = document.getElementById('venomCanvas');
         const ctx = canvas.getContext('2d');
         let W, H;
         let mouse = { x: -1000, y: -1000 };
+        let nearEdge = false;
+        const EDGE_ZONE = 150;
 
         function resize() {
             W = canvas.width = window.innerWidth;
@@ -330,91 +342,71 @@
         document.addEventListener('mousemove', function(e) {
             mouse.x = e.clientX;
             mouse.y = e.clientY;
+            nearEdge = mouse.x < EDGE_ZONE || mouse.x > W - EDGE_ZONE ||
+                       mouse.y < EDGE_ZONE || mouse.y > H - EDGE_ZONE;
         });
 
         class Tentacle {
-            constructor() {
-                this.reset();
-            }
+            constructor() { this.reset(); }
+
             reset() {
                 var side = Math.floor(Math.random() * 4);
-                if (side === 0) { this.x = Math.random() * W; this.y = -10; }
-                else if (side === 1) { this.x = W + 10; this.y = Math.random() * H; }
-                else if (side === 2) { this.x = Math.random() * W; this.y = H + 10; }
-                else { this.x = -10; this.y = Math.random() * H; }
+                if (side === 0) { this.sx = Math.random() * W; this.sy = -10; }
+                else if (side === 1) { this.sx = W + 10; this.sy = Math.random() * H; }
+                else if (side === 2) { this.sx = Math.random() * W; this.sy = H + 10; }
+                else { this.sx = -10; this.sy = Math.random() * H; }
 
-                this.segments = 30 + Math.floor(Math.random() * 20);
+                this.segments = 25 + Math.floor(Math.random() * 15);
                 this.points = [];
-                this.maxLen = 120 + Math.random() * 180;
-                this.thickness = 1 + Math.random() * 3;
-                this.speed = 0.3 + Math.random() * 0.5;
-                this.wobble = 0.5 + Math.random() * 1.5;
+                this.thickness = 1 + Math.random() * 2.5;
+                this.speed = 2 + Math.random() * 3;
+                this.wobble = 0.8 + Math.random() * 2;
                 this.offset = Math.random() * 1000;
                 this.growing = true;
                 this.life = 1;
-                this.decay = 0.001 + Math.random() * 0.003;
-
-                var dx = W / 2 - this.x;
-                var dy = H / 2 - this.y;
-                var dist = Math.sqrt(dx * dx + dy * dy);
-                this.dirX = dx / dist;
-                this.dirY = dy / dist;
+                this.decay = 0.005 + Math.random() * 0.008;
             }
+
             update(t) {
-                if (this.growing) {
-                    var last = this.points.length > 0 ? this.points[this.points.length - 1] : { x: this.x, y: this.y };
-                    var angle = Math.atan2(
-                        mouse.y - last.y,
-                        mouse.x - last.x
-                    );
-                    var mx = (mouse.x + last.x) / 2;
-                    var my = (mouse.y + last.y) / 2;
-                    var toMouse = Math.sqrt((mouse.x - last.x) ** 2 + (mouse.y - last.y) ** 2);
-
-                    var nx = last.x + this.speed * 3;
-                    var ny = last.y + Math.sin(t * 0.002 + this.offset + this.points.length * 0.3) * this.wobble;
-
-                    if (toMouse > 80) {
-                        nx += (mouse.x - last.x) * 0.02;
-                        ny += (mouse.y - last.y) * 0.02;
-                    } else {
-                        nx -= (mouse.x - last.x) * 0.05;
-                        ny -= (mouse.y - last.y) * 0.05;
+                if (!nearEdge) {
+                    this.life -= 0.03;
+                    if (this.life <= 0) this.reset();
+                    for (var i = 0; i < this.points.length; i++) {
+                        this.points[i].y += Math.sin(t * 0.005 + i * 0.5) * 0.3;
                     }
+                    return;
+                }
 
-                    nx += Math.sin(t * 0.003 + this.offset) * 0.8;
-                    ny += Math.cos(t * 0.004 + this.offset) * 0.8;
+                if (this.growing) {
+                    var last = this.points.length > 0 ? this.points[this.points.length - 1] : { x: this.sx, y: this.sy };
+
+                    var nx = last.x + (mouse.x - last.x) * 0.04;
+                    var ny = last.y + (mouse.y - last.y) * 0.04;
+                    nx += Math.sin(t * 0.003 + this.offset + this.points.length * 0.2) * this.wobble;
+                    ny += Math.cos(t * 0.004 + this.offset + this.points.length * 0.2) * this.wobble;
+
+                    var toMouse = Math.sqrt((mouse.x - last.x) ** 2 + (mouse.y - last.y) ** 2);
+                    if (toMouse < 80) {
+                        nx = last.x + (last.x - mouse.x) * 0.06;
+                        ny = last.y + (last.y - mouse.y) * 0.06;
+                    }
 
                     this.points.push({ x: nx, y: ny });
-
-                    if (this.points.length >= this.segments) {
-                        this.growing = false;
-                    }
+                    if (this.points.length >= this.segments) this.growing = false;
                 }
 
                 this.life -= this.decay;
                 if (this.life <= 0) this.reset();
-
-                for (var i = 1; i < this.points.length; i++) {
-                    var p = this.points[i];
-                    var pp = this.points[i - 1];
-                    var dx = mouse.x - p.x;
-                    var dy = mouse.y - p.y;
-                    var dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 70) {
-                        p.x -= dx * 0.03;
-                        p.y -= dy * 0.03;
-                    }
-                }
             }
+
             draw() {
-                if (this.points.length < 2) return;
+                if (this.points.length < 2 || this.life <= 0) return;
                 for (var i = 1; i < this.points.length; i++) {
                     var p1 = this.points[i - 1];
                     var p2 = this.points[i];
                     var progress = i / this.points.length;
-                    var alpha = this.life * progress * 0.6;
-                    var w = this.thickness * (1 - progress * 0.7);
+                    var alpha = this.life * progress * 0.7;
+                    var w = this.thickness * (1 - progress * 0.6);
 
                     ctx.beginPath();
                     ctx.moveTo(p1.x, p1.y);
@@ -427,17 +419,15 @@
                 if (this.points.length > 0) {
                     var tip = this.points[this.points.length - 1];
                     ctx.beginPath();
-                    ctx.arc(tip.x, tip.y, this.thickness * 0.8, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,255,' + (this.life * 0.4) + ')';
+                    ctx.arc(tip.x, tip.y, this.thickness, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,' + (this.life * 0.5) + ')';
                     ctx.fill();
                 }
             }
         }
 
         var tentacles = [];
-        for (var i = 0; i < 12; i++) {
-            tentacles.push(new Tentacle());
-        }
+        for (var i = 0; i < 18; i++) tentacles.push(new Tentacle());
 
         function animateVenom(t) {
             ctx.clearRect(0, 0, W, H);
