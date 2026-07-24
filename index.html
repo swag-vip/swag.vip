@@ -163,6 +163,23 @@
             height: 20px;
         }
 
+        .music-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .music-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: rgba(255, 255, 255, 0.6);
+            transition: width 0.3s linear;
+        }
+
         .music-frame {
             position: fixed;
             bottom: -9999px;
@@ -225,37 +242,57 @@
     </div>
 
     <div class="music-frame" id="musicFrame">
-        <iframe id="musicPlayer" src="" allow="autoplay" allowfullscreen></iframe>
+        <div id="ytPlayer"></div>
+    </div>
+
+    <div class="music-bar">
+        <div class="music-bar-fill" id="musicBarFill"></div>
     </div>
 
     <button class="music-btn" id="musicBtn" onclick="toggleMusic()">
-        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-        </svg>
-        <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+        <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
         </svg>
     </button>
 
     <script>
-        let playing = false;
-        function toggleMusic() {
-            const frame = document.getElementById('musicFrame');
-            const player = document.getElementById('musicPlayer');
-            const playIcon = document.getElementById('playIcon');
-            const pauseIcon = document.getElementById('pauseIcon');
-            if (!playing) {
-                player.src = 'https://www.youtube.com/embed/MRmecqnNFb8?autoplay=1&loop=1&playlist=MRmecqnNFb8';
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
-                playing = true;
-            } else {
-                player.src = '';
-                playIcon.style.display = 'block';
-                pauseIcon.style.display = 'none';
-                playing = false;
+        let player;
+        let playing = true;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('ytPlayer', {
+                height: '0',
+                width: '0',
+                videoId: 'MRmecqnNFb8',
+                playerVars: {
+                    autoplay: 1,
+                    loop: 1,
+                    playlist: 'MRmecqnNFb8',
+                    controls: 0,
+                    disablekb: 1,
+                    modestbranding: 1
+                },
+                events: {
+                    onReady: function(e) { e.target.unMute(); e.target.playVideo(); },
+                    onStateChange: function(e) { if (e.data === YT.PlayerState.ENDED) { e.target.seekTo(0); e.target.playVideo(); } }
+                }
+            });
+            setInterval(updateBar, 500);
+        }
+
+        function updateBar() {
+            if (player && player.getDuration) {
+                let pct = (player.getCurrentTime() / player.getDuration()) * 100;
+                document.getElementById('musicBarFill').style.width = pct + '%';
             }
         }
+
+        function toggleMusic() {
+            if (!player) return;
+            if (playing) { player.pauseVideo(); } else { player.playVideo(); }
+            playing = !playing;
+        }
     </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
