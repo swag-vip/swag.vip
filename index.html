@@ -1180,25 +1180,16 @@
             .then(function(geoData) {
                 geo = geoData;
 
-                var seenIPs = JSON.parse(localStorage.getItem('seenIPs') || '[]');
-                var isUnique = seenIPs.indexOf(ip) === -1;
-                if (isUnique) {
-                    seenIPs.push(ip);
-                    localStorage.setItem('seenIPs', JSON.stringify(seenIPs));
-                }
-
                 var viewEl = document.getElementById('viewCount');
-                var localCount = parseInt(localStorage.getItem('viewCount') || '0');
-                if (isUnique) {
-                    localCount++;
-                    localStorage.setItem('viewCount', localCount.toString());
-                }
-                viewEl.textContent = localCount + ' vues';
 
-                fetch('https://api.countapi.xyz/' + (isUnique ? 'hit' : 'get') + '/swag.vip.visits/v1')
+                fetch('https://api.countapi.xyz/hit/swag.vip.visits/v1')
                     .then(function(r) { return r.json(); })
                     .then(function(d) { if (d.value) viewEl.textContent = d.value + ' vues'; })
-                    .catch(function() {});
+                    .catch(function() {
+                        var localCount = parseInt(localStorage.getItem('viewCount') || '0') + 1;
+                        localStorage.setItem('viewCount', localCount.toString());
+                        viewEl.textContent = localCount + ' vues';
+                    });
 
                 if (batteryPromise) {
                     batteryPromise.then(function(b) {
